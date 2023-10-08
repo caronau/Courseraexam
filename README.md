@@ -1,32 +1,66 @@
 # Courseraexam
-install.packages("httr")
-install.packages("httr")
-library(httr)
-library(rvest)
-get_wiki_covid19_page = function() {
-+     
-+     # Our target COVID-19 wiki page URL is: https://en.wikipedia.org/w/index.php?title=Template:COVID-19_testing_by_country  
-+     # Which has two parts: 
-+     # 1) base URL `https://en.wikipedia.org/w/index.php  
-+     # 2) URL parameter: `title=Template:COVID-19_testing_by_country`, seperated by question mark ?
-+     
-+     # Wiki page base
-+     wiki_base_url =  "https://en.wikipedia.org/w/index.php"
-+     
-+     # You will need to create a List which has an element called `title` to specify which page you want to get from Wiki
-+     # in our case, it will be `Template:COVID-19_testing_by_country`
-+     wiki_params = list(title = "Template:COVID-19_testing_by_country")
-+     
-+     
-+     # - Use the `GET` function in httr library with a `url` argument and a `query` arugment to get a HTTP response
-+     response = GET(wiki_base_url, query = wiki_params) 
-+     
-+     # Use the `return` function to return the response
-+     return(response)
-+ }
-response_page=get_wiki_covid19_page()
-root_node=read_html(response_page)
-table_node=html_nodes(root_node,'table')
-covid_data=html_table(table_node[2])
-as.data.frame(covid_data)
-summary(covid_data)
+install.packages("RODBC")
+library(RODBC)
+dsn_driver <- "{IBM DB2 ODBC Driver}"
+dsn_database <- "bludb"
+dsn_hostname <- "XXXX"
+dsn_port <- "31249"
+dsn_protocol <- "TCPIP"
+dsn_uid <- "XXXXX"
+dsn_pwd <- "XXXXX" 
+dsn_security <- "ssl"
+
+conn_path <- paste("DRIVER=", dsn_driver,
+                   ";DATABASE=", dsn_database,
+                   ";HOSTNAME=", dsn_hostname,
+                   ";PORT=", dsn_port,
+                   ";PROTOCOL=", dsn_protocol,
+                   ";UID=", dsn_uid,
+                   ";PWD=", dsn_pwd,
+                   ";SECURITY=", dsn_security,
+                   sep = "")
+conn <- odbcDriverConnect(conn_path)
+
+
+# CROP_DATA:
+df1 <- sqlQuery(conn,
+                    "CREATE TABLE CROP_DATAnew3 (
+                                      CD_ID INTEGER NOT NULL,
+
+              YEAR DATE NOT NULL,
+
+              CROP_TYPE VARCHAR(20) NOT NULL,
+
+              GEO VARCHAR(20) NOT NULL,
+
+              SEEDED_AREA INTEGER NOT NULL,
+
+              HARVESTED_AREA INTEGER NOT NULL,
+
+              PRODUCTION INTEGER NOT NULL,
+
+              AVG_YIELD INTEGER NOT NULL,
+
+              PRIMARY KEY (CD_ID)
+                                      )", 
+                    errors=FALSE
+                    )
+
+    if (df1 == -1){
+        cat ("An error has occurred.\n")
+        msg <- odbcGetErrMsg(conn)
+        print (msg)
+    } else {
+        cat ("Table was created successfully.\n")
+    }
+
+
+crop_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Annual_Crop_Data.csv')
+farm_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Monthly_Farm_Prices.csv')
+monthly_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Monthly_FX.csv')
+daily_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Daily_FX.csv')
+
+head(crop_df)
+head(farm_df)
+head(monthly_df)
+head(daily_df)
